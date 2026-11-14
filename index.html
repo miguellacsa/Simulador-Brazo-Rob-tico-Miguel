@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio Virtual de Mecánica Eléctrica - Brazo 5-DOF | Grupo 01</title>
+<link rel="stylesheet" href="css/styles.css">
+<script type="importmap">
+{"imports":{
+ "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+ "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<canvas id="particles-bg"></canvas>
+
+<section id="screen-intro" class="screen active">
+  <div class="glass-card intro-card">
+    <div class="badge-tag">Proyecto de Investigación | UCV</div>
+    <h1 class="project-title">Análisis Cinemático del Movimiento de un Brazo Robótico mediante Modelamiento y Simulación 3D</h1>
+    <p class="subtitle">Laboratorio virtual de Mecánica Eléctrica · Brazo de aluminio azul 5 DOF + pinza</p>
+    <div class="group-section"><h2>👥 Grupo 01 - Integrantes</h2><div class="members-grid" id="members-grid"></div></div>
+    <div class="start-btn-container"><button id="btn-start" class="btn-primary">INICIAR LABORATORIO 3D</button></div>
+  </div>
+</section>
+
+<section id="screen-sim" class="screen">
+  <header class="sim-header glass-bar">
+    <button id="btn-back" class="btn-secondary">⬅️ Volver</button>
+    <div class="sim-title">Simulador Virtual · Brazo 5-DOF</div>
+    <div class="status-pill" id="status-pill"><span class="pulse-dot"></span><span id="status-text">Inactivo</span></div>
+  </header>
+
+  <aside class="panel left glass-card">
+    <h3>🎛️ Articulaciones</h3>
+    <div id="sliders"></div>
+    <div class="control-group"><div class="control-label"><span>⚡ Velocidad</span><span id="val-speed" class="angle-val">Normal</span></div>
+      <input type="range" id="slider-speed" min="1" max="3" value="2" step="1"></div>
+    <div class="row">
+      <button class="btn-action" id="btn-home">HOME</button>
+      <button class="btn-action" id="btn-transport">🛋️ Transporte</button>
+    </div>
+    <button class="btn-action btn-estop" id="btn-estop">🛑 PARADA DE EMERGENCIA</button>
+    <h3>Automatización</h3>
+    <div class="auto-grid">
+      <button class="btn-action btn-accent" data-task="assemble">🔧 Ensamblar circuito</button>
+      <button class="btn-action" data-task="volt">Medir voltaje</button>
+      <button class="btn-action" data-task="curr">Medir corriente</button>
+      <button class="btn-action" data-task="res">Medir resistencia</button>
+      <button class="btn-action" data-task="cont">Continuidad</button>
+      <button class="btn-action" data-task="inspect">Inspección</button>
+      <button class="btn-action" data-task="sort">Clasificar</button>
+      <button class="btn-action" data-task="panel"> Tablero</button>
+    </div>
+    <h3>Banco de pruebas</h3>
+    <div class="control-group"><div class="control-label"><span>Resistencia R1</span>
+      <select id="sel-r"><option value="47">47 Ω</option><option value="220">220 Ω</option><option value="330" selected>330 Ω</option><option value="1000">1 kΩ</option></select></div></div>
+    <div class="control-group"><div class="control-label"><span>Falla simulada</span>
+      <select id="sel-fault"><option value="none">Ninguna</option><option value="open">Pista abierta</option><option value="ledshort">LED en corto</option><option value="railshort">Corto en fuente</option></select></div></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="chk-s1" checked> Interruptor S1</label>
+      <button class="btn-action" id="btn-reset-bench">♻️ Reiniciar mesa</button></div>
+    <div class="view-preset-buttons">
+      <button class="btn-preset active" data-view="iso">📐 Iso</button>
+      <button class="btn-preset" data-view="front">👁️ Frontal</button>
+      <button class="btn-preset" data-view="top">⬆️ Superior</button>
+    </div>
+  </aside>
+
+  <div id="canvas-container"><canvas id="robot-canvas"></canvas></div>
+
+  <aside class="panel right glass-card">
+    <h3>📟 Instrumentación</h3>
+    <div class="meters">
+      <div class="meter"><span>Voltaje</span><b id="m-v">0.00</b><i>V</i></div>
+      <div class="meter"><span>Corriente</span><b id="m-i">0.0</b><i>mA</i></div>
+      <div class="meter"><span>Resistencia</span><b id="m-r">∞</b><i>Ω</i></div>
+      <div class="meter"><span>Continuidad</span><b id="m-c">NO</b><i></i></div>
+    </div>
+    <div class="state-box" id="circ-state">Circuito: —</div>
+    <h4>📍 Efector final P(X,Y,Z) cm</h4>
+    <div class="telemetry-bar">X <strong id="pos-x">0</strong> | Y <strong id="pos-y">0</strong> | Z <strong id="pos-z">0</strong></div>
+    <h4>📐 Tabla D-H</h4>
+    <table class="dh-table"><thead><tr><th>i</th><th>θ</th><th>d</th><th>a</th><th>α</th></tr></thead><tbody id="dh-body"></tbody></table>
+    <h4>T₀⁵ (Y = altura)</h4>
+    <div class="matrix-grid" id="matrix-container"></div>
+    <h4>⚙️ Servomotores</h4>
+    <table class="dh-table"><tbody id="servo-body"></tbody></table>
+    <h4>🔌 Tablero</h4>
+    <div class="telemetry-bar" id="panel-state">K1: OFF</div>
+  </aside>
+
+  <section class="panel bottom glass-card">
+    <div class="log-head"><b>📜 Registro de operaciones</b>
+      <span>Tareas: <b id="cnt-ok">0</b> · Errores: <b id="cnt-err">0</b></span>
+      <button class="btn-secondary" id="btn-clear-log">Limpiar</button></div>
+    <div id="log"></div>
+  </section>
+</section>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
